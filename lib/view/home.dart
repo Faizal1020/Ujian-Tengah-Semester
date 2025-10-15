@@ -1,135 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:game_app/model/game.dart';
-import 'package:game_app/viewmodel/fetchgame.dart';
+import 'package:get/get.dart';
+import 'package:getx_app/viewmodel/tasbih_controller.dart';
 
-class Home extends StatefulWidget {
+class Home extends StatelessWidget {
   const Home({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  late Future<List<Game>> gameList;
-
-  @override
-  void initState() {
-    super.initState();
-    loadGames();
-  }
-
-  Future<List<Game>> loadGames() async {
-    gameList = fetchGames();
-    return gameList;
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // Inisialisasi controller (di-push ke dependency management GetX)
+    final TasbihController controller = Get.put(TasbihController());
+
     return Scaffold(
-      backgroundColor: Colors.amberAccent.shade400,
+      backgroundColor: const Color.fromARGB(255, 119, 210, 145),
       body: SafeArea(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        child: Center(
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _searchBar(),
-              const SizedBox(height: 10),
-              FutureBuilder<List<Game>>(
-                future: fetchGames(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Expanded(
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
-                    );
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Text('Tidak ada data game.');
-                  } else {
-                    final games = snapshot.data!.take(25).toList();
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: games.length,
-                        itemBuilder: (context, index) {
-                          final game = games[index];
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                '/detail',
-                                arguments: game.id,
-                              );
-                            },
-                            child: _listItem(
-                              game.thumbnail,
-                              game.title,
-                              game.genre,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }
-                },
+              // Counter (nilai ditampilkan reaktif via Obx)
+              Obx(
+                () => Text(
+                  '${controller.counter.value.round()}',
+                  style: const TextStyle(fontSize: 250),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Progress bar reaktif
+              Obx(
+                () => Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 40.0),
+                  child: LinearProgressIndicator(
+                    value: controller.progress.value / 100,
+                    backgroundColor: Colors.white54,
+                    color: Colors.amberAccent.shade400,
+                    minHeight: 15,
+                    // borderRadius is available on some versions; to avoid errors, wrap if needed
+                    // but for simplicity we keep default
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 48),
+
+              // Tombol fingerprint (tap untuk increment)
+              ClipRRect(
+                borderRadius: const BorderRadius.all(Radius.circular(50)),
+                child: InkWell(
+                  onTap: controller.incrementCounter,
+                  child: Container(
+                    decoration: const BoxDecoration(color: Colors.white),
+                    padding: const EdgeInsets.all(30),
+                    child: const Icon(
+                      Icons.fingerprint,
+                      size: 100,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-// 🔹 Widget Search Bar
-TextField _searchBar() {
-  return TextField(
-    cursorColor: Colors.blue,
-    decoration: InputDecoration(
-      fillColor: Colors.blue.shade50,
-      filled: true,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(20),
-        borderSide: const BorderSide(width: 0, style: BorderStyle.none),
-      ),
-      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-      prefixIcon: const Icon(
-        Icons.search_outlined,
-        color: Colors.blue,
-        size: 30,
-      ),
-      hintText: 'Cari game',
-      hintStyle: TextStyle(fontSize: 14, color: Colors.grey.withOpacity(0.7)),
-    ),
-  );
-}
-
-// 🔹 Widget List Item
-Card _listItem(String urlCover, String judul, String genre) {
-  return Card(
-    clipBehavior: Clip.antiAlias,
-    elevation: 3,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    child: ListTile(
-      tileColor: Colors.blue.shade50,
-      leading: SizedBox(
-        width: 75,
-        height: 75,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.network(
-            urlCover,
-            scale: 3,
-            fit: BoxFit.cover,
-          ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: controller.resetCounter,
+        backgroundColor: Colors.white,
+        child: const Icon(
+          Icons.refresh_outlined,
+          color: Colors.black,
         ),
       ),
-      title: Text(judul),
-      subtitle: Text(genre),
-      trailing: const Icon(Icons.more_vert),
-      isThreeLine: false,
-      titleAlignment: ListTileTitleAlignment.center,
-    ),
-  );
+    );
+  }
 }

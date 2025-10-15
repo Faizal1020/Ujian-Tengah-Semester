@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:game_app/view/home.dart';
-import 'package:game_app/view/detail.dart';
+import 'package:get/get.dart';
+import 'package:getx_app/view/home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,19 +11,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-    ));
-
-    return MaterialApp(
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Game Store',
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const Home(),
-        '/detail': (context) => const DetailPage(),
-      },
+      title: 'Tasbih Digital GetX',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        useMaterial3: true,
+      ),
+      home: const Home(),
     );
   }
 }
